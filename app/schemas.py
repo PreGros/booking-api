@@ -52,6 +52,7 @@ class BookingRead(BaseModel):
             status=booking.status,
         )
 
+
 class BusyInterval(BaseModel):
     start: AwareDatetime
     end: AwareDatetime

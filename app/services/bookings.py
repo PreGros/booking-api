@@ -49,6 +49,7 @@ async def cancel_booking(session: AsyncSession, booking_id: int) -> Booking:
     await session.commit()
     return booking
 
+
 async def get_busy_intervals(
     session: AsyncSession, resource_id: int, start: datetime, end: datetime
 ) -> list[Booking]:
