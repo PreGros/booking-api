@@ -9,7 +9,7 @@ from app.models import Role, User
 from app.security import create_access_token
 
 EMAIL = "user@example.com"
-PASSWORD = "correct-horse-battery"
+PASSWORD = "test-password"
 
 
 async def register(client: AsyncClient, email: str = EMAIL, password: str = PASSWORD):
