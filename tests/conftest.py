@@ -6,11 +6,11 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 
+from app.cache import get_redis
 from app.config import settings
 from app.db import get_session
 from app.main import app
 from app.models import Base
-from app.cache import get_redis
 
 
 @pytest.fixture
@@ -25,6 +25,7 @@ async def db_engine() -> AsyncIterator[AsyncEngine]:
     yield engine
     await engine.dispose()
 
+
 @pytest.fixture
 async def redis_client() -> AsyncIterator[Redis]:
     r = Redis.from_url(settings.test_redis_url, decode_responses=True)
@@ -32,6 +33,7 @@ async def redis_client() -> AsyncIterator[Redis]:
     yield r
     await r.flushdb()
     await r.aclose()
+
 
 @pytest.fixture
 async def client(

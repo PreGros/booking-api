@@ -1,13 +1,13 @@
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from app.cache import create_redis
 from app.db import engine
 from app.errors import AppError
 from app.routers import bookings, resources
-from app.cache import create_redis
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

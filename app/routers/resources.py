@@ -4,11 +4,11 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 from pydantic import AwareDatetime
 
+from app.cache import AVAILABILITY_TTL, RedisDep, availability_field, availability_key
 from app.db import SessionDep
 from app.schemas import AvailabilityOut, BusyInterval, ResourceCreate, ResourceRead
 from app.services import bookings
 from app.services import resources as resource_service
-from app.cache import AVAILABILITY_TTL, RedisDep, availability_field, availability_key
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 

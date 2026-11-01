@@ -2,10 +2,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 
+from app.cache import RedisDep, availability_key
 from app.db import SessionDep
 from app.schemas import BookingCreate, BookingRead
 from app.services import bookings as booking_service
-from app.cache import RedisDep, availability_key
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
