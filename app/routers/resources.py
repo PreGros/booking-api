@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 from pydantic import AwareDatetime
 
+from app.cache import AVAILABILITY_TTL, RedisDep, availability_field, availability_key
 from app.db import SessionDep
 from app.schemas import AvailabilityOut, BusyInterval, ResourceCreate, ResourceRead
 from app.services import bookings
@@ -28,14 +29,29 @@ async def list_resources(
 
 @router.get("/{resource_id}/availability", response_model=AvailabilityOut)
 async def get_availability(
-    resource_id: int, session: SessionDep, start: AwareDatetime, end: AwareDatetime
+    resource_id: int,
+    session: SessionDep,
+    redis: RedisDep,
+    start: AwareDatetime,
+    end: AwareDatetime,
 ) -> AvailabilityOut:
     if end <= start:
         raise HTTPException(status_code=422, detail="end must be after start")
+
+    key = availability_key(resource_id)
+    field = availability_field(start, end)
+
+    cached = await redis.hget(key, field)
+    if cached is not None:
+        return AvailabilityOut.model_validate_json(cached)
+
     rows = await bookings.get_busy_intervals(session, resource_id, start, end)
-    return AvailabilityOut(
+    result = AvailabilityOut(
         resource_id=resource_id,
         start=start,
         end=end,
         busy=[BusyInterval(start=b.during.lower, end=b.during.upper) for b in rows],
     )
+    await redis.hset(key, field, result.model_dump_json())
+    await redis.expire(key, AVAILABILITY_TTL)
+    return result

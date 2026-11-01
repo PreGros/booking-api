@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://booking:booking@localhost:5432/booking"
     test_database_url: str = "postgresql+asyncpg://booking:booking@localhost:5432/booking_test"
     redis_url: str = "redis://localhost:6379/0"
+    test_redis_url: str = "redis://localhost:6379/1"
 
 
 settings = Settings()
