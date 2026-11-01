@@ -4,7 +4,9 @@ from tests.test_availability import WIDE, make_resource
 from tests.test_bookings import payload
 
 
-async def test_anonymous_cannot_create_booking(admin_client: AsyncClient, client: AsyncClient) -> None:
+async def test_anonymous_cannot_create_booking(
+    admin_client: AsyncClient, client: AsyncClient
+) -> None:
     rid = await make_resource(admin_client)
     response = await client.post("/bookings", json=payload(rid, "10:00", "11:00"))
     assert response.status_code == 401

@@ -42,7 +42,9 @@ async def test_availability_is_cached(admin_client: AsyncClient, redis_client: R
     assert await redis_client.exists(f"availability:{rid}") == 1
 
 
-async def test_new_booking_invalidates_cache(admin_client: AsyncClient, redis_client: Redis) -> None:
+async def test_new_booking_invalidates_cache(
+    admin_client: AsyncClient, redis_client: Redis
+) -> None:
     rid = await make_resource(admin_client)
     await admin_client.get(f"/resources/{rid}/availability", params=WIDE)
 

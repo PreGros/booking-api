@@ -4,7 +4,9 @@ from app.main import app
 
 
 async def test_health() -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as admin_client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as admin_client:
         response = await admin_client.get("/health")
 
     assert response.status_code == 200

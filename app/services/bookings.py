@@ -34,7 +34,11 @@ async def create_booking(session: AsyncSession, data: BookingCreate, user_id: in
 
 
 async def list_bookings(
-    session: AsyncSession, resource_id: int | None, limit: int, offset: int, user_id: int | None = None
+    session: AsyncSession,
+    resource_id: int | None,
+    limit: int,
+    offset: int,
+    user_id: int | None = None,
 ) -> list[Booking]:
     stmt = select(Booking).order_by(Booking.id).limit(limit).offset(offset)
     if resource_id is not None:

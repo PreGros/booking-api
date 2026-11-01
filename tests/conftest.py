@@ -1,5 +1,5 @@
-from collections.abc import AsyncIterator
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
+from contextlib import asynccontextmanager
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -14,7 +14,6 @@ from app.main import app
 from app.models import Base, Role, User
 from app.security import create_access_token
 
-from contextlib import asynccontextmanager
 
 @pytest.fixture
 async def db_engine() -> AsyncIterator[AsyncEngine]:
@@ -66,7 +65,7 @@ async def _authed_client(
     db_engine: AsyncEngine,
     email: str,
     role: Role,
-) -> AsyncGenerator[AsyncClient, None]:
+) -> AsyncGenerator[AsyncClient]:
     factory = async_sessionmaker(db_engine, expire_on_commit=False)
 
     async with factory() as session:
@@ -98,6 +97,8 @@ async def user_client(client: AsyncClient, db_engine: AsyncEngine) -> AsyncItera
 
 
 @pytest.fixture
-async def other_user_client(client: AsyncClient, db_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
+async def other_user_client(
+    client: AsyncClient, db_engine: AsyncEngine
+) -> AsyncIterator[AsyncClient]:
     async with _authed_client(db_engine, "other@example.com", Role.USER) as c:
         yield c

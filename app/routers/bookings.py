@@ -14,7 +14,9 @@ router = APIRouter(prefix="/bookings", tags=["bookings"], dependencies=[Depends(
 
 
 @router.post("", status_code=201, response_model=BookingRead)
-async def create_booking(data: BookingCreate, session: SessionDep, redis: RedisDep, user: CurrentUser) -> BookingRead:
+async def create_booking(
+    data: BookingCreate, session: SessionDep, redis: RedisDep, user: CurrentUser
+) -> BookingRead:
     booking = await booking_service.create_booking(session, data, user.id)
     await redis.delete(availability_key(booking.resource_id))
     return BookingRead.from_model(booking)
@@ -34,7 +36,9 @@ async def list_bookings(
 
 
 @router.delete("/{booking_id}", response_model=BookingRead)
-async def cancel_booking(booking_id: int, session: SessionDep, redis: RedisDep, user: CurrentUser) -> BookingRead:
+async def cancel_booking(
+    booking_id: int, session: SessionDep, redis: RedisDep, user: CurrentUser
+) -> BookingRead:
     booking = await booking_service.cancel_booking(session, booking_id, user)
     await redis.delete(availability_key(booking.resource_id))
     return BookingRead.from_model(booking)
