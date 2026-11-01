@@ -3,8 +3,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import AwareDatetime
 
+from app.auth import require_role
 from app.cache import AVAILABILITY_TTL, RedisDep, availability_field, availability_key
 from app.db import SessionDep
+from app.models import Role
 from app.ratelimit import rate_limit
 from app.schemas import AvailabilityOut, BusyInterval, ResourceCreate, ResourceRead
 from app.services import bookings
@@ -13,7 +15,12 @@ from app.services import resources as resource_service
 router = APIRouter(prefix="/resources", tags=["resources"], dependencies=[Depends(rate_limit)])
 
 
-@router.post("", response_model=ResourceRead, status_code=201)
+@router.post(
+    "",
+    response_model=ResourceRead,
+    status_code=201,
+    dependencies=[Depends(require_role(Role.ADMIN))],
+)
 async def create_resource(data: ResourceCreate, session: SessionDep):
     return await resource_service.create_resource(session, data)
 

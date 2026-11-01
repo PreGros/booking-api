@@ -36,6 +36,7 @@ class Booking(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     resource_id: Mapped[int] = mapped_column(ForeignKey("resources.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     customer_email: Mapped[str] = mapped_column(String(255))
     during: Mapped[Range[datetime]] = mapped_column(TSTZRANGE)
     status: Mapped[str] = mapped_column(String(20), default="confirmed")
