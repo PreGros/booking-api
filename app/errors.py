@@ -7,6 +7,17 @@ class AppError(Exception):
         self.headers = headers
 
 
+class AuthenticationError(AppError):
+    status_code = 401
+
+    def __init__(self, headers: dict[str, str] | None = None) -> None:
+        super().__init__(headers or {"WWW-Authenticate": "Bearer"})
+
+
+class ForbiddenError(AppError):
+    status_code = 403
+
+
 class NotFoundError(AppError):
     status_code = 404
 
@@ -17,6 +28,22 @@ class ConflictError(AppError):
 
 class RateLimitError(AppError):
     status_code = 429
+
+
+class EmailAlreadyRegistered(ConflictError):
+    detail = "A user with this email already exists"
+
+
+class InvalidCredentials(AuthenticationError):
+    detail = "Incorrect email or password"
+
+
+class InvalidToken(AuthenticationError):
+    detail = "Invalid or expired token"
+
+
+class InsufficientPermissions(ForbiddenError):
+    detail = "Not enough permissions"
 
 
 class ResourceNotFound(NotFoundError):

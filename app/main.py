@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from app.cache import create_redis
 from app.db import engine
 from app.errors import AppError
-from app.routers import bookings, resources
+from app.routers import auth, bookings, resources
 
 
 @asynccontextmanager
@@ -20,6 +20,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Booking API", version="0.1.0", lifespan=lifespan)
 app.include_router(resources.router)
 app.include_router(bookings.router)
+app.include_router(auth.router)
 
 
 @app.exception_handler(AppError)
