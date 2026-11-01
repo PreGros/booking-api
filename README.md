@@ -4,7 +4,7 @@
 
 A booking/reservation REST API. Double-booking is prevented by PostgreSQL itself, not by application code.
 
-**Stack:** FastAPI, SQLAlchemy 2.x (async, asyncpg), PostgreSQL 16, Alembic, pytest + httpx, ruff, uv, Docker.
+**Stack:** FastAPI, SQLAlchemy 2.x (async, asyncpg), PostgreSQL 16, Redis 7, Alembic, pytest + httpx, ruff, uv, Docker.
 
 ## Endpoints
 
@@ -13,11 +13,20 @@ A booking/reservation REST API. Double-booking is prevented by PostgreSQL itself
 | GET | `/health` | Health check |
 | POST | `/resources` | Create a resource |
 | GET | `/resources` | List resources |
-| POST | `/bookings` | Create a booking (`404` unknown resource, `409` overlap) |
+| GET | `/resources/{id}/availability?start=&end=` | Busy intervals of a resource in a time window (cached) |
+| POST | `/bookings` | Create a booking |
 | GET | `/bookings` | List bookings |
 | DELETE | `/bookings/{id}` | Cancel a booking |
 
 Interactive docs are available at `/docs` when the app is running.
+
+## Caching
+
+The availability endpoint uses cache-aside with Redis: one hash per resource (`availability:{id}`), one field per requested time window. Creating or cancelling a booking deletes the resource's hash, so the next read goes to PostgreSQL.
+
+## Rate limiting
+
+All `/resources` and `/bookings` routes use a fixed-window counter in Redis, per client IP, route and HTTP method. When the limit is exceeded the API returns `429` with a `Retry-After` header. `/health` is not limited.
 
 ## Run locally
 
@@ -37,7 +46,7 @@ Then open http://localhost:8000/docs.
 
 ## Tests and linting
 
-Needs the database from `docker compose up -d` (it also creates the `booking_test` database).
+Needs PostgreSQL and Redis from `docker compose up -d` (PostgreSQL also creates the `booking_test` database; tests use Redis database 1 via `TEST_REDIS_URL`).
 
 ```bash
 uv run pytest -v

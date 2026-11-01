@@ -1,16 +1,16 @@
-from http.client import HTTPException
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import AwareDatetime
 
 from app.cache import AVAILABILITY_TTL, RedisDep, availability_field, availability_key
 from app.db import SessionDep
+from app.ratelimit import rate_limit
 from app.schemas import AvailabilityOut, BusyInterval, ResourceCreate, ResourceRead
 from app.services import bookings
 from app.services import resources as resource_service
 
-router = APIRouter(prefix="/resources", tags=["resources"])
+router = APIRouter(prefix="/resources", tags=["resources"], dependencies=[Depends(rate_limit)])
 
 
 @router.post("", response_model=ResourceRead, status_code=201)
