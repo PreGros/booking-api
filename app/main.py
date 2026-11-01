@@ -7,12 +7,14 @@ from fastapi.responses import JSONResponse
 from app.db import engine
 from app.errors import AppError
 from app.routers import bookings, resources
-
+from app.cache import create_redis
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI):
+    app.state.redis = create_redis()
     yield
-    await engine.dispose()  # close the connection pool on shutdown
+    await app.state.redis.aclose()
+    await engine.dispose()
 
 
 app = FastAPI(title="Booking API", version="0.1.0", lifespan=lifespan)

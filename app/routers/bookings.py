@@ -5,13 +5,15 @@ from fastapi import APIRouter, Query
 from app.db import SessionDep
 from app.schemas import BookingCreate, BookingRead
 from app.services import bookings as booking_service
+from app.cache import RedisDep, availability_key
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
 
 @router.post("", response_model=BookingRead, status_code=201)
-async def create_booking(data: BookingCreate, session: SessionDep) -> BookingRead:
+async def create_booking(data: BookingCreate, session: SessionDep, redis: RedisDep) -> BookingRead:
     booking = await booking_service.create_booking(session, data)
+    await redis.delete(availability_key(booking.resource_id))
     return BookingRead.from_model(booking)
 
 
@@ -27,6 +29,7 @@ async def list_bookings(
 
 
 @router.delete("/{booking_id}", response_model=BookingRead)
-async def cancel_booking(booking_id: int, session: SessionDep) -> BookingRead:
+async def cancel_booking(booking_id: int, session: SessionDep, redis: RedisDep) -> BookingRead:
     booking = await booking_service.cancel_booking(session, booking_id)
+    await redis.delete(availability_key(booking.resource_id))
     return BookingRead.from_model(booking)

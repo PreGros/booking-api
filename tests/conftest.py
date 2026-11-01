@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 
@@ -9,6 +10,7 @@ from app.config import settings
 from app.db import get_session
 from app.main import app
 from app.models import Base
+from app.cache import get_redis
 
 
 @pytest.fixture
@@ -23,17 +25,31 @@ async def db_engine() -> AsyncIterator[AsyncEngine]:
     yield engine
     await engine.dispose()
 
-
 @pytest.fixture
-async def client(db_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
+async def redis_client() -> AsyncIterator[Redis]:
+    r = Redis.from_url(settings.TEST_REDIS_URL, decode_responses=True)
+    await r.flushdb()
+    yield r
+    await r.flushdb()
+    await r.aclose()
+
+async def client(
+    db_engine: AsyncEngine,
+    redis_client: Redis,
+) -> AsyncIterator[AsyncClient]:
     session_factory = async_sessionmaker(db_engine, expire_on_commit=False)
 
     async def override_get_session():
         async with session_factory() as session:
             yield session
 
-    # Dependency override: the app now talks to the test database
     app.dependency_overrides[get_session] = override_get_session
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+    app.dependency_overrides[get_redis] = lambda: redis_client
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as c:
         yield c
+
     app.dependency_overrides.clear()
