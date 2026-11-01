@@ -54,6 +54,7 @@ jobs:
       TEST_DATABASE_URL: postgresql+asyncpg://booking:booking@localhost:5432/booking_test
       REDIS_URL: redis://localhost:6379/0
       TEST_REDIS_URL: redis://localhost:6379/1
+      JWT_SECRET: replace-with-your-own-very-secret
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7

@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     test_redis_url: str = "redis://localhost:6379/1"
     rate_limit_requests: int = 60
     rate_limit_window: int = 60
+    jwt_secret: str
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
 
 
 settings = Settings()
