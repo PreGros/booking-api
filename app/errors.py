@@ -2,6 +2,10 @@ class AppError(Exception):
     status_code = 500
     detail = "Internal error"
 
+    def __init__(self, headers: dict[str, str] | None = None) -> None:
+        super().__init__(self.detail)
+        self.headers = headers
+
 
 class NotFoundError(AppError):
     status_code = 404
@@ -9,6 +13,10 @@ class NotFoundError(AppError):
 
 class ConflictError(AppError):
     status_code = 409
+
+
+class RateLimitError(AppError):
+    status_code = 429
 
 
 class ResourceNotFound(NotFoundError):
@@ -25,3 +33,7 @@ class ResourceAlreadyExists(ConflictError):
 
 class BookingConflict(ConflictError):
     detail = "Resource is already booked for that time range"
+
+
+class RateLimitExceeded(RateLimitError):
+    detail = "Too many requests"
