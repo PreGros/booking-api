@@ -34,6 +34,7 @@ class BookingCreate(BaseModel):
 class BookingRead(BaseModel):
     id: int
     resource_id: int
+    user_id: int
     customer_email: str
     start: datetime
     end: datetime
@@ -46,6 +47,7 @@ class BookingRead(BaseModel):
         return cls(
             id=booking.id,
             resource_id=booking.resource_id,
+            user_id=booking.user_id,
             customer_email=booking.customer_email,
             start=booking.during.lower,
             end=booking.during.upper,

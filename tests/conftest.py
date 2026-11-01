@@ -1,4 +1,5 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
+from contextlib import asynccontextmanager
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -10,7 +11,8 @@ from app.cache import get_redis
 from app.config import settings
 from app.db import get_session
 from app.main import app
-from app.models import Base
+from app.models import Base, Role, User
+from app.security import create_access_token
 
 
 @pytest.fixture
@@ -56,3 +58,47 @@ async def client(
         yield c
 
     app.dependency_overrides.clear()
+
+
+@asynccontextmanager
+async def _authed_client(
+    db_engine: AsyncEngine,
+    email: str,
+    role: Role,
+) -> AsyncGenerator[AsyncClient]:
+    factory = async_sessionmaker(db_engine, expire_on_commit=False)
+
+    async with factory() as session:
+        user = User(email=email, hashed_password="not-used", role=role)
+        session.add(user)
+        await session.commit()
+
+    token = create_access_token(user.id, user.role)
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+        headers={"Authorization": f"Bearer {token}"},
+    ) as c:
+        yield c
+
+
+# Each fixture depends on `client` only so its dependency overrides are installed.
+@pytest.fixture
+async def admin_client(client: AsyncClient, db_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
+    async with _authed_client(db_engine, "admin@example.com", Role.ADMIN) as c:
+        yield c
+
+
+@pytest.fixture
+async def user_client(client: AsyncClient, db_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
+    async with _authed_client(db_engine, "user@example.com", Role.USER) as c:
+        yield c
+
+
+@pytest.fixture
+async def other_user_client(
+    client: AsyncClient, db_engine: AsyncEngine
+) -> AsyncIterator[AsyncClient]:
+    async with _authed_client(db_engine, "other@example.com", Role.USER) as c:
+        yield c
