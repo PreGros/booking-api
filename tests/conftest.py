@@ -27,12 +27,13 @@ async def db_engine() -> AsyncIterator[AsyncEngine]:
 
 @pytest.fixture
 async def redis_client() -> AsyncIterator[Redis]:
-    r = Redis.from_url(settings.TEST_REDIS_URL, decode_responses=True)
+    r = Redis.from_url(settings.test_redis_url, decode_responses=True)
     await r.flushdb()
     yield r
     await r.flushdb()
     await r.aclose()
 
+@pytest.fixture
 async def client(
     db_engine: AsyncEngine,
     redis_client: Redis,
