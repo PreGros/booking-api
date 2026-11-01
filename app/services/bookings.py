@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from datetime import datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import Range
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,3 +48,21 @@ async def cancel_booking(session: AsyncSession, booking_id: int) -> Booking:
     booking.status = "cancelled"  # frees the slot: the constraint only covers 'confirmed'
     await session.commit()
     return booking
+
+async def get_busy_intervals(
+    session: AsyncSession, resource_id: int, start: datetime, end: datetime
+) -> list[Booking]:
+    if await session.get(Resource, resource_id) is None:
+        raise ResourceNotFound
+
+    stmt = (
+        select(Booking)
+        .where(
+            Booking.resource_id == resource_id,
+            Booking.status == "confirmed",
+            Booking.during.overlaps(Range(start, end, bounds="[)")),
+        )
+        .order_by(func.lower(Booking.during))
+    )
+    result = await session.scalars(stmt)
+    return list(result)

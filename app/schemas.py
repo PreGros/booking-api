@@ -51,3 +51,14 @@ class BookingRead(BaseModel):
             end=booking.during.upper,
             status=booking.status,
         )
+
+class BusyInterval(BaseModel):
+    start: AwareDatetime
+    end: AwareDatetime
+
+
+class AvailabilityOut(BaseModel):
+    resource_id: int
+    start: AwareDatetime
+    end: AwareDatetime
+    busy: list[BusyInterval]

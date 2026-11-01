@@ -1,9 +1,12 @@
+from http.client import HTTPException
 from typing import Annotated
 
 from fastapi import APIRouter, Query
+from pydantic import AwareDatetime
 
 from app.db import SessionDep
-from app.schemas import ResourceCreate, ResourceRead
+from app.routers import bookings
+from app.schemas import AvailabilityOut, BusyInterval, ResourceCreate, ResourceRead
 from app.services import resources as resource_service
 
 router = APIRouter(prefix="/resources", tags=["resources"])
@@ -21,3 +24,18 @@ async def list_resources(
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
     return await resource_service.list_resources(session, limit, offset)
+
+
+@router.get("/{resource_id}/availability", response_model=AvailabilityOut)
+async def get_availability(
+    resource_id: int, session: SessionDep, start: AwareDatetime, end: AwareDatetime
+) -> AvailabilityOut:
+    if end <= start:
+        raise HTTPException(status_code=422, detail="end must be after start")
+    rows = await bookings.get_busy_intervals(session, resource_id, start, end)
+    return AvailabilityOut(
+        resource_id=resource_id,
+        start=start,
+        end=end,
+        busy=[BusyInterval(start=b.during.lower, end=b.during.upper) for b in rows],
+    )
