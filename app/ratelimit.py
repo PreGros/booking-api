@@ -7,7 +7,9 @@ from app.errors import RateLimitExceeded
 
 async def rate_limit(request: Request, redis: RedisDep) -> None:
     ip = request.client.host if request.client else "unknown"
-    key = f"ratelimit:{request.url.path}:{ip}"
+    route = request.scope.get("route")
+    path = route.path if route else request.url.path
+    key = f"ratelimit:{request.method}:{path}:{ip}"
 
     async with redis.pipeline(transaction=True) as pipe:
         pipe.incr(key)

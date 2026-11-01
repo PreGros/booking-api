@@ -1,7 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Query
-from fastapi.params import Depends
+from fastapi import APIRouter, Query, Depends
 
 from app.cache import RedisDep, availability_key
 from app.db import SessionDep
@@ -9,10 +8,10 @@ from app.ratelimit import rate_limit
 from app.schemas import BookingCreate, BookingRead
 from app.services import bookings as booking_service
 
-router = APIRouter(prefix="/bookings", tags=["bookings"])
+router = APIRouter(prefix="/bookings", tags=["bookings"], dependencies=[Depends(rate_limit)])
 
 
-@router.post("", status_code=201, response_model=BookingRead, dependencies=[Depends(rate_limit)])
+@router.post("", status_code=201, response_model=BookingRead)
 async def create_booking(data: BookingCreate, session: SessionDep, redis: RedisDep) -> BookingRead:
     booking = await booking_service.create_booking(session, data)
     await redis.delete(availability_key(booking.resource_id))
