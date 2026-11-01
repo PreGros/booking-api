@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from pydantic import AwareDatetime
 
 from app.db import SessionDep
-from app.routers import bookings
+from app.services import bookings
 from app.schemas import AvailabilityOut, BusyInterval, ResourceCreate, ResourceRead
 from app.services import resources as resource_service
 
