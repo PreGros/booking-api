@@ -16,9 +16,7 @@ def verify_password(password: str, hashed: str) -> bool:
     return password_hash.verify(password, hashed)
 
 
-def create_access_token(
-    user_id: int, role: str, expires_delta: timedelta | None = None
-) -> str:
+def create_access_token(user_id: int, role: str, expires_delta: timedelta | None = None) -> str:
     expires = expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
     payload = {
         "sub": str(user_id),
