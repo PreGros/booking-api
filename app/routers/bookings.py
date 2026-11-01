@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.cache import RedisDep, availability_key
 from app.db import SessionDep
